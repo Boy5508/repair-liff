@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body{font-family:sans-serif;text-align:center;padding:48px 16px}
+    #go{display:none;padding:14px 24px;background:#06c755;color:#fff;
+        border-radius:8px;text-decoration:none;font-size:18px}
+  </style>
+</head>
+<body>
+  <p id="msg">กำลังเตรียมแบบฟอร์ม…</p>
+  <a id="go" href="#" target="_top">แตะที่นี่เพื่อกรอกแบบฟอร์ม</a>
+
+<script>
+const LIFF_ID  = "2009843838-RO8BYBhR";
+const FORM_URL = "https://form.jotform.com/suphavitncs/report";
+
+const msg = document.getElementById("msg");
+const a   = document.getElementById("go");
+const step = (t) => { msg.textContent = t; };
+
+const timeout = (p, ms, label) => Promise.race([
+  p,
+  new Promise((_, rej) => setTimeout(() => rej(new Error("timeout at " + label)), ms))
+]);
+
+(async () => {
+  try {
+    step("1/3 กำลัง init LIFF… v3");
+    await timeout(liff.init({ liffId: LIFF_ID }), 8000, "liff.init");
+
+    step("2/3 init ผ่าน | inClient=" + liff.isInClient() +
+         " | loggedIn=" + liff.isLoggedIn());
+
+    if (!liff.isLoggedIn()) {
+      step("ยังไม่ล็อกอิน กำลังพาไปล็อกอิน…");
+      liff.login();
+      return;
+    }
+
+    const p = await timeout(liff.getProfile(), 8000, "liff.getProfile");
+    const url = FORM_URL + "?line_uid=" + encodeURIComponent(p.userId);
+
+    a.href = url;
+    a.style.display = "inline-block";
+    step("3/3 พร้อมแล้ว แตะปุ่มเพื่อไปกรอกแบบฟอร์ม");
+    a.addEventListener("click", (ev) => {
+      try { window.top.location.href = url; ev.preventDefault(); } catch (_) {}
+    });
+  } catch (e) {
+    step("Error: " + e.message);
+  }
+})();
+</script>
+</body>
+</html>
